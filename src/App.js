@@ -1,25 +1,52 @@
 import logo from './logo.svg';
 import './App.css';
+import { useEffect, useState } from 'react';
+import { db } from './firebase';
 
-function App() {
+const App = () => {
+
+  // default, saving, success, error
+  const [status, setStatus] = useState('default')
+  const [url, setUrl] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const onSubmit = e => {
+    e.preventDefault();
+    setStatus('saving');
+    db.collection("img").doc("singleDisplay").set({
+      imgUrl: url
+    })
+    .then(() => {
+        console.log("Document successfully written!");
+        setStatus('success');
+        setTimeout(() => {
+          setUrl('');
+          setStatus('default');
+        }, 2000)
+    })
+    .catch((error) => {
+        console.error("Error writing document: ", error);
+        setStatus(error);
+    });
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Enter a URL to an image and it will display on Will's Unicorn HAT HD!
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        { status === 'error' && 
+          <p>There was an error, yo. { errorMsg }</p>
+        }
+        <form onSubmit={onSubmit}>
+          <input type="text" name="imgUrl" value={url} onChange={e => setUrl(e.target.value)} disabled={status === 'saving'} />
+          <button type="submit" disabled={status === 'saving'}>Submit</button>
+        </form>
       </header>
     </div>
   );
-}
+};
 
 export default App;
